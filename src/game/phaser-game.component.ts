@@ -1,14 +1,14 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import Phaser from 'phaser';
 import StartGame from './main';
 import { EventBus } from './EventBus';
 
 @Component({
-  selector: 'phaser-game',
+  selector: 'app-phaser-game',
   template: '<div id="game-container"></div>',
   standalone: true,
 })
-export class PhaserGame implements OnInit {
+export class PhaserGameComponent implements OnInit, OnDestroy {
   scene: Phaser.Scene;
   game: Phaser.Game;
 

@@ -6,7 +6,7 @@
     "start": "ng serve",
     "build": "ng build --base-href='./'",
     "lint": "ng lint",
-    "format": "npx prettier --write . --config ./.prettierrc"
+    "format": "npx prettier --write ."
   },
   "dependencies": {
     "@angular/animations": "^17.2.0",
