@@ -1,48 +1,35 @@
-import { Component, Input, OnInit } from "@angular/core";
-import Phaser from "phaser";
-import StartGame from "./main";
-import { EventBus } from "./EventBus";
+import { Component, Input, OnInit } from '@angular/core';
+import Phaser from 'phaser';
+import StartGame from './main';
+import { EventBus } from './EventBus';
 
 @Component({
-    selector: 'phaser-game',
-    template: '<div id="game-container"></div>',
-    standalone: true,
+  selector: 'phaser-game',
+  template: '<div id="game-container"></div>',
+  standalone: true,
 })
-export class PhaserGame implements OnInit
-{
+export class PhaserGame implements OnInit {
+  scene: Phaser.Scene;
+  game: Phaser.Game;
 
-    scene: Phaser.Scene;
-    game: Phaser.Game;
+  sceneCallback: (scene: Phaser.Scene) => void;
 
-    sceneCallback: (scene: Phaser.Scene) => void;
+  ngOnInit() {
+    this.game = StartGame('game-container');
 
-    ngOnInit()
-    {
-        this.game = StartGame('game-container');
+    EventBus.on('current-scene-ready', (scene: Phaser.Scene) => {
+      this.scene = scene;
 
-        EventBus.on('current-scene-ready', (scene: Phaser.Scene) => {
+      if (this.sceneCallback) {
+        this.sceneCallback(scene);
+      }
+    });
+  }
 
-            this.scene = scene;
-
-            if (this.sceneCallback)
-            {
-
-                this.sceneCallback(scene);
-
-            }
-
-        });
+  // Component unmounted
+  ngOnDestroy() {
+    if (this.game) {
+      this.game.destroy(true);
     }
-
-    // Component unmounted
-    ngOnDestroy()
-    {
-
-        if (this.game)
-        {
-
-            this.game.destroy(true);
-
-        }
-    }
+  }
 }
