@@ -1,5 +1,6 @@
 import { EventBus } from '../EventBus';
 import { Scene } from 'phaser';
+import { BattleshipGrid } from '../elements/BattleshipGrid';
 
 export interface availableShip {
   name: string;
@@ -13,16 +14,6 @@ export interface shipOnGrid {
   x: number;
   y: number;
 }
-
-interface gridCell {
-  shipId?: number; // cell is busy if shipId is present
-  hit: boolean;
-}
-
-type BattleshipGrid = {
-  name: string; // name als referenz nutzen zur grafischen darstellung
-  grid: gridCell[][];
-};
 
 export class Game extends Scene {
   camera: Phaser.Cameras.Scene2D.Camera;
@@ -61,8 +52,8 @@ export class Game extends Scene {
       { ship: this.availableShips[3], shipId: 2433, orientation: '↕️', x: 3, y: 3 },
     ];
 
-    this.attackGrid = this.initializeGrid('attackGrid', shipsOnGrid);
-    this.defenseGrid = this.initializeGrid('defenseGrid', shipsOnGrid.reverse()); // todo sinnvolle werte verwenden
+    this.attackGrid = new BattleshipGrid('attack', this.gridSize, shipsOnGrid);
+    this.defenseGrid = new BattleshipGrid('defense', this.gridSize, shipsOnGrid); // todo sinnvolle werte verwenden
 
     this.input.on('pointerdown', (pointer: any, object: any) => {
       // todo hier müsste es echte koordinaten geben
@@ -83,22 +74,33 @@ export class Game extends Scene {
    * checks whether the game is still in progress
    * @returns whether the game is over
    */
-  checkGameOver(): void | false {
-    if (this.getRemainingShipIds(this.attackGrid).length === 0) {
+  checkGameOver(): boolean {
+    if (this.attackGrid.allShipsSunken()) {
       // player has won the game
       alert('player has won the game');
       this.changeScene({ winner: 'player' });
+      return true;
     }
-    if (this.getRemainingShipIds(this.defenseGrid).length === 0) {
+    if (this.defenseGrid.allShipsSunken()) {
       // the opponent has won the game
       alert('the opponent has won the game');
       this.changeScene({ winner: 'opponent' });
+      return true;
     }
     return false;
   }
 
   private playerMove(x: number, y: number) {
-    if (this.attackCellOfBattleshipGrid(this.attackGrid, x, y)) {
+    if (this.attackGrid.isValidMove(x, y)) {
+      const move = this.attackGrid.placeMove(x, y);
+      if (move !== undefined) {
+        this.displayAttackedCell('attack', x, y, 'hit');
+        if (this.attackGrid.getShipWasSunken(move)) {
+          this.displayShipWasSunken(move);
+        }
+      } else {
+        this.displayAttackedCell('attack', x, y, 'missed');
+      }
       if (!this.checkGameOver()) {
         this.opponentMove();
       }
@@ -106,98 +108,36 @@ export class Game extends Scene {
   }
 
   private opponentMove() {
-    while (
-      this.attackCellOfBattleshipGrid(this.defenseGrid, Math.floor(Math.random() * 8), Math.floor(Math.random() * 8))
-    );
+    let x, y;
+    do {
+      x = Math.floor(Math.random() * 8);
+      y = Math.floor(Math.random() * 8);
+    } while (!this.defenseGrid.isValidMove(x, y));
+    this.defenseGrid.placeMove(x, y);
+    // todo einen sinnvollen weg finden für die Ausgabe
     this.checkGameOver();
+    this.test();
   }
 
-  /**
-   * given grid is filled with empty cells and all ships from shipsOnGrid are placed into the grid
-   * @param shipsOnGrid array w/ information of ships to place on the grid
-   * @returns grid used for attackGrid or defenseGrid
-   */
-  private initializeGrid(name: string, shipsOnGrid: shipOnGrid[]): BattleshipGrid {
-    const grid = new Array(this.gridSize).fill(null).map(() => {
-      return new Array(this.gridSize).fill(null).map(() => ({ hit: false }) as gridCell);
-    });
-    shipsOnGrid.forEach((s) => {
-      for (let i = 0; i < s.ship.size; i++) {
-        const x = s.orientation === '↔️' ? s.x + i : s.x;
-        const y = s.orientation === '↔️' ? s.y : s.y + i;
-        grid[x][y].shipId = s.shipId;
+  test() {
+    const b = [];
+    for (let x = 0; x < this.gridSize; x++) {
+      const a = [];
+      for (let y = 0; y < this.gridSize; y++) {
+        a.push(this.defenseGrid.isValidMove(x, y) ? ' ' : 'X');
       }
-    });
-    return { name: name, grid: grid };
+      b.push(a);
+    }
+    console.table(b);
+    console.log(
+      b
+        .flat()
+        .filter((v) => v !== ' ')
+        .join('').length,
+    );
   }
 
-  /**
-   * a move is evaluated
-   * @param grid the given BattleshipGrid
-   * @param x coordinate
-   * @param y coordinate
-   * @returns whether a valid cell was hit
-   */
-  private attackCellOfBattleshipGrid(grid: BattleshipGrid, x: number, y: number): boolean {
-    if (x > this.gridSize || y > this.gridSize || grid.grid[x][y].hit) {
-      return false; // todo sinnvolle fehlerbehandlung
-    }
-    grid.grid[x][y].hit = true;
-    const shipId = grid.grid[x][y].shipId;
-    if (shipId !== undefined) {
-      this.displayAttackedCell(grid, x, y, 'hit');
-      if (this.getShipWasSunken(grid, shipId)) {
-        this.displayShipWasSunken(shipId);
-      }
-    } else {
-      this.displayAttackedCell(grid, x, y, 'missed');
-    }
-    return true;
-  }
-
-  /**
-   * get all shipIds of not sunken ships of the given grid
-   * @param grid the given BattleshipGrid
-   * @returns array of shipIds
-   */
-  private getRemainingShipIds(grid: BattleshipGrid): number[] {
-    console.log('Restliche Schiffe auf ' + grid.name + ':');
-    console.log([
-      ...new Set(
-        grid.grid
-          .flat()
-          .filter((s) => !s.hit && s.shipId !== undefined)
-          .map(({ shipId }) => shipId as number), // no undefined because busy
-      ),
-    ]);
-    if (grid.name === 'defenseGrid') {
-      console.log('Das Grid gegen das der Computer spielt:');
-      console.log(grid);
-    }
-    return [
-      ...new Set(
-        grid.grid
-          .flat()
-          .filter((s) => !s.hit && s.shipId !== undefined)
-          .map(({ shipId }) => shipId as number), // undefined not possible because busy
-      ),
-    ];
-  }
-
-  /**
-   * checks whether a ship is still alive
-   * @param grid the given BattleshipGrid
-   * @param shipId of the in question ship
-   * @returns whether the ship was sunken
-   */
-  private getShipWasSunken(grid: BattleshipGrid, shipId: number): boolean {
-    return !this.getRemainingShipIds(grid).includes(shipId);
-  }
-
-  private displayAttackedCell(grid: BattleshipGrid, x: number, y: number, state: 'hit' | 'missed') {
-    if (grid.name === 'defenseGrid') {
-      return;
-    }
+  private displayAttackedCell(grid: string, x: number, y: number, state: 'hit' | 'missed') {
     console.log('AUSGABE ' + x * 1024 + 30 + ' / ' + y * 768 + 30);
     this.add
       .text((x * 1024) / 8 + 30, (y * 768) / 8 + 30, state, {
