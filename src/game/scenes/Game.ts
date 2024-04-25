@@ -1,12 +1,12 @@
 import { EventBus } from '../EventBus';
 import { Scene } from 'phaser';
 
-interface availableShip {
+export interface availableShip {
   name: string;
   size: number;
 }
 
-interface shipOnGrid {
+export interface shipOnGrid {
   ship: availableShip;
   shipId: number;
   orientation?: '↔️' | '↕️';
@@ -19,7 +19,10 @@ interface gridCell {
   hit: boolean;
 }
 
-type BattleshipGrid = { name: string; grid: gridCell[][] }; // name als referenz nutzen zur grafischen darstellung
+type BattleshipGrid = {
+  name: string; // name als referenz nutzen zur grafischen darstellung
+  grid: gridCell[][];
+};
 
 export class Game extends Scene {
   camera: Phaser.Cameras.Scene2D.Camera;
@@ -72,24 +75,24 @@ export class Game extends Scene {
     EventBus.emit('current-scene-ready', this);
   }
 
-  changeScene() {
-    this.scene.start('GameOver');
+  changeScene(data: { winner: string }) {
+    this.scene.start('GameOver', data);
   }
 
   /**
-   * cecks whether the game is still in progress
+   * checks whether the game is still in progress
    * @returns whether the game is over
    */
-  checkGameOver(): boolean {
+  checkGameOver(): void | false {
     if (this.getRemainingShipIds(this.attackGrid).length === 0) {
       // player has won the game
       alert('player has won the game');
-      return true;
+      this.changeScene({ winner: 'player' });
     }
     if (this.getRemainingShipIds(this.defenseGrid).length === 0) {
       // the opponent has won the game
       alert('the opponent has won the game');
-      return true;
+      this.changeScene({ winner: 'opponent' });
     }
     return false;
   }
@@ -140,10 +143,11 @@ export class Game extends Scene {
       return false; // todo sinnvolle fehlerbehandlung
     }
     grid.grid[x][y].hit = true;
-    if (grid.grid[x][y].shipId !== undefined) {
+    const shipId = grid.grid[x][y].shipId;
+    if (shipId !== undefined) {
       this.displayAttackedCell(grid, x, y, 'hit');
-      if (!this.getRemainingShipIds(grid).includes(grid.grid[x][y].shipId!)) {
-        this.displayShipWasSunken(grid.grid[x][y].shipId!);
+      if (this.getShipWasSunken(grid, shipId)) {
+        this.displayShipWasSunken(shipId);
       }
     } else {
       this.displayAttackedCell(grid, x, y, 'missed');
@@ -175,9 +179,19 @@ export class Game extends Scene {
         grid.grid
           .flat()
           .filter((s) => !s.hit && s.shipId !== undefined)
-          .map(({ shipId }) => shipId as number), // no undefined because busy
+          .map(({ shipId }) => shipId as number), // undefined not possible because busy
       ),
     ];
+  }
+
+  /**
+   * checks whether a ship is still alive
+   * @param grid the given BattleshipGrid
+   * @param shipId of the in question ship
+   * @returns whether the ship was sunken
+   */
+  private getShipWasSunken(grid: BattleshipGrid, shipId: number): boolean {
+    return !this.getRemainingShipIds(grid).includes(shipId);
   }
 
   private displayAttackedCell(grid: BattleshipGrid, x: number, y: number, state: 'hit' | 'missed') {
