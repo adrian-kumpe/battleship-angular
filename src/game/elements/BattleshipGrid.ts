@@ -1,4 +1,4 @@
-import { shipOnGrid } from '../scenes/Game';
+import { ShipsOnGrid } from '../scenes/GameSetup';
 
 export interface gridCell {
   shipId?: number; // cell is busy if shipId is present
@@ -12,7 +12,7 @@ export class BattleshipGrid {
     public name: string, // todo name als referenz nutzen zur grafischen darstellung
     private gridSize: number,
     /** array w/ information of ships to place on the grid */
-    private shipsOnGrid: shipOnGrid[],
+    private shipsOnGrid: ShipsOnGrid,
   ) {
     this.initializeGrid();
   }

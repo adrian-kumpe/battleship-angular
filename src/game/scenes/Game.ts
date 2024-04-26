@@ -1,36 +1,13 @@
 import { EventBus } from '../EventBus';
 import { Scene } from 'phaser';
 import { BattleshipGrid } from '../elements/BattleshipGrid';
-
-export interface availableShip {
-  name: string;
-  size: number;
-}
-
-export interface shipOnGrid {
-  ship: availableShip;
-  shipId: number;
-  orientation?: '↔️' | '↕️';
-  x: number;
-  y: number;
-}
+import { ShipsOnGrid } from './GameSetup';
 
 export class Game extends Scene {
   camera: Phaser.Cameras.Scene2D.Camera;
   background: Phaser.GameObjects.Image;
   gameText: Phaser.GameObjects.Text;
 
-  // todo das global liegen haben, evtl maximal anzahl hier pflegen
-  availableShips: availableShip[] = [
-    { name: 'aircraft-carrier', size: 5 },
-    { name: 'battleship', size: 4 },
-    { name: 'cruiser', size: 3 },
-    { name: 'destroyer', size: 2 },
-    { name: 'escort', size: 1 },
-  ];
-
-  // todo größe des grids als input bekommen
-  gridSize = 8;
   attackGrid: BattleshipGrid;
   defenseGrid: BattleshipGrid;
 
@@ -38,24 +15,17 @@ export class Game extends Scene {
     super('Game');
   }
 
-  create() {
+  create(data: { player: ShipsOnGrid; opponent: ShipsOnGrid; gridSize: number }) {
     this.camera = this.cameras.main;
     this.camera.setBackgroundColor(0x00ff00);
 
     this.background = this.add.image(512, 384, 'background');
     this.background.setAlpha(0.5);
 
-    // todo das als input bekommen für gegner und spieler
-    const shipsOnGrid: shipOnGrid[] = [
-      { ship: this.availableShips[0], shipId: 1243, orientation: '↕️', x: 0, y: 0 },
-      { ship: this.availableShips[2], shipId: 4313, orientation: '↔️', x: 2, y: 0 },
-      { ship: this.availableShips[3], shipId: 2433, orientation: '↕️', x: 3, y: 3 },
-    ];
+    this.attackGrid = new BattleshipGrid('attack', data.gridSize, data.opponent);
+    this.defenseGrid = new BattleshipGrid('defense', data.gridSize, data.player);
 
-    this.attackGrid = new BattleshipGrid('attack', this.gridSize, shipsOnGrid);
-    this.defenseGrid = new BattleshipGrid('defense', this.gridSize, shipsOnGrid); // todo sinnvolle werte verwenden
-
-    this.input.on('pointerdown', (pointer: any, object: any) => {
+    this.input.on('pointerdown', (pointer: Phaser.Input.Pointer, object: any) => {
       // todo hier müsste es echte koordinaten geben
       const x = Math.floor((pointer.x / 1024) * 8);
       const y = Math.floor((pointer.y / 768) * 8);
@@ -121,9 +91,9 @@ export class Game extends Scene {
 
   test() {
     const b = [];
-    for (let x = 0; x < this.gridSize; x++) {
+    for (let x = 0; x < 8; x++) {
       const a = [];
-      for (let y = 0; y < this.gridSize; y++) {
+      for (let y = 0; y < 8; y++) {
         a.push(this.defenseGrid.isValidMove(x, y) ? ' ' : 'X');
       }
       b.push(a);
