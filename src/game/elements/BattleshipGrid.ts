@@ -6,11 +6,11 @@ export interface gridCell {
 }
 
 export class BattleshipGrid {
-  public grid: gridCell[][];
+  private grid: gridCell[][];
 
   constructor(
-    public name: string, // todo name als referenz nutzen zur grafischen darstellung
     private gridSize: number,
+    private gridData: { gridOffsetX: number; gridOffsetY: number; cellSize: number },
     /** array w/ information of ships to place on the grid */
     private shipsOnGrid: ShipsOnGrid,
   ) {
@@ -32,6 +32,14 @@ export class BattleshipGrid {
       }
     });
     this.grid = grid;
+  }
+
+  /**
+   * get information about the placement of the grid
+   * @returns gridData
+   */
+  public getGridData() {
+    return this.gridData;
   }
 
   /**

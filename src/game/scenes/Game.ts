@@ -18,21 +18,36 @@ export class Game extends Scene {
   create(data: { player: ShipsOnGrid; opponent: ShipsOnGrid; gridSize: number }) {
     this.camera = this.cameras.main;
     this.drawGrid();
-
-    EventBus.emit('current-scene-ready', this);
     this.camera.setBackgroundColor(0x00ff00);
 
     this.background = this.add.image(512, 384, 'background');
     this.background.setAlpha(0.5);
 
-    this.attackGrid = new BattleshipGrid('attack', data.gridSize, data.opponent);
-    this.defenseGrid = new BattleshipGrid('defense', data.gridSize, data.player);
+    this.attackGrid = new BattleshipGrid(
+      data.gridSize,
+      { gridOffsetX: 50, gridOffsetY: 170, cellSize: 50 },
+      data.opponent,
+    );
+    this.defenseGrid = new BattleshipGrid(
+      data.gridSize,
+      { gridOffsetX: 550, gridOffsetY: 170, cellSize: 50 },
+      data.player,
+    );
 
-    this.input.on('pointerdown', (pointer: Phaser.Input.Pointer, object: any) => {
-      // todo hier müsste es echte koordinaten geben
-      const x = Math.floor((pointer.x / 1024) * 8);
-      const y = Math.floor((pointer.y / 768) * 8);
-      this.playerMove(x, y);
+    this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      const x = pointer.x - this.attackGrid.getGridData().gridOffsetX;
+      const y = pointer.y - this.attackGrid.getGridData().gridOffsetY;
+      if (
+        x > 0 &&
+        y > 0 &&
+        x < this.attackGrid.getGridData().cellSize * data.gridSize &&
+        y < this.attackGrid.getGridData().cellSize * data.gridSize
+      ) {
+        this.playerMove(
+          Math.floor(x / this.attackGrid.getGridData().cellSize),
+          Math.floor(y / this.attackGrid.getGridData().cellSize),
+        );
+      }
     });
     // todo es müsste noch rechtsklick geben, mit dem man markieren kann, dass dort kein schiff ist
 
@@ -67,12 +82,12 @@ export class Game extends Scene {
     if (this.attackGrid.isValidMove(x, y)) {
       const move = this.attackGrid.placeMove(x, y);
       if (move !== undefined) {
-        this.displayAttackedCell('attack', x, y, 'hit');
+        this.drawMove(this.attackGrid.getGridData(), x, y, 'H');
         if (this.attackGrid.getShipWasSunken(move)) {
           this.displayShipWasSunken(move);
         }
       } else {
-        this.displayAttackedCell('attack', x, y, 'missed');
+        this.drawMove(this.attackGrid.getGridData(), x, y, 'M');
       }
       if (!this.checkGameOver()) {
         this.opponentMove();
@@ -86,43 +101,20 @@ export class Game extends Scene {
       x = Math.floor(Math.random() * 8);
       y = Math.floor(Math.random() * 8);
     } while (!this.defenseGrid.isValidMove(x, y));
-    this.defenseGrid.placeMove(x, y);
-    // todo einen sinnvollen weg finden für die Ausgabe
-    this.checkGameOver();
-    this.test();
-  }
-
-  test() {
-    const b = [];
-    for (let x = 0; x < 8; x++) {
-      const a = [];
-      for (let y = 0; y < 8; y++) {
-        a.push(this.defenseGrid.isValidMove(x, y) ? ' ' : 'X');
+    const move = this.defenseGrid.placeMove(x, y);
+    if (move !== undefined) {
+      this.drawMove(this.defenseGrid.getGridData(), x, y, 'H');
+      if (this.defenseGrid.getShipWasSunken(move)) {
+        this.displayShipWasSunken(move);
       }
-      b.push(a);
+    } else {
+      this.drawMove(this.defenseGrid.getGridData(), x, y, 'M');
     }
-    console.table(b);
-    console.log(
-      b
-        .flat()
-        .filter((v) => v !== ' ')
-        .join('').length,
-    );
+    this.checkGameOver();
   }
 
-  private displayAttackedCell(grid: string, x: number, y: number, state: 'hit' | 'missed') {
-    console.log('AUSGABE ' + x * 1024 + 30 + ' / ' + y * 768 + 30);
-    this.add
-      .text((x * 1024) / 8 + 30, (y * 768) / 8 + 30, state, {
-        fontFamily: 'Arial Black',
-        fontSize: 30,
-        color: '#ffffff',
-        stroke: '#000000',
-        strokeThickness: 8,
-        align: 'center',
-      })
-      .setOrigin(0.5)
-      .setDepth(100);
+  private displayShipWasSunken(shipId: number) {
+    alert('Schiff ' + shipId + ' wurde versenkt!');
   }
 
   drawGrid() {
@@ -172,7 +164,23 @@ export class Game extends Scene {
       fontSize: 23,
       color: '#000000',
     });
-  private displayShipWasSunken(shipId: number) {
-    alert('Schiff ' + shipId + ' wurde versenkt!');
+  }
+
+  private drawMove(
+    gridData: { gridOffsetX: number; gridOffsetY: number; cellSize: number },
+    x: number,
+    y: number,
+    char: string,
+  ) {
+    this.gameText = this.add.text(
+      gridData.gridOffsetX + gridData.cellSize * x + 15,
+      gridData.gridOffsetY + gridData.cellSize * y + 15,
+      char,
+      {
+        fontFamily: 'Arial Black',
+        fontSize: 24,
+        color: '#000000',
+      },
+    );
   }
 }
