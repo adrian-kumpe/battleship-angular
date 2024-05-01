@@ -36,12 +36,13 @@ export class GameSetup extends Scene {
     { name: 'destroyer', size: 2 },
     { name: 'escort', size: 1 },
   ];
+  private baseShipId = 1000;
 
   constructor() {
     super('GameSetup');
   }
 
-  create(data: { gameMode: number }) {
+  create(data: { gameMode: gameModes }) {
     this.camera = this.cameras.main;
     this.camera.setBackgroundColor(0xff4500);
 
@@ -70,17 +71,18 @@ export class GameSetup extends Scene {
     });
   }
 
-  private generateShipId(): number {
-    return Math.floor(Math.random() * 1000);
+  private getShipId(): number {
+    return this.baseShipId++;
   }
 
   private placeShipsOnGridRandomly(): ShipsOnGrid {
     return [
-      { ship: this.availableShips[0], shipId: 1243, orientation: '↕️', x: 0, y: 0 },
-      { ship: this.availableShips[2], shipId: 4313, orientation: '↔️', x: 2, y: 0 },
-      { ship: this.availableShips[3], shipId: 2433, orientation: '↕️', x: 3, y: 3 },
+      { ship: this.availableShips[0], shipId: this.getShipId(), orientation: '↕️', x: 0, y: 0 },
+      { ship: this.availableShips[2], shipId: this.getShipId(), orientation: '↔️', x: 2, y: 0 },
+      { ship: this.availableShips[3], shipId: this.getShipId(), orientation: '↕️', x: 3, y: 3 },
     ];
     const shipsOnGrid: ShipsOnGrid = [];
+    // const placementGrid: boolean[][] = [];
     for (let i = 0; i < 5; i++) {
       for (let j = 0; j < this.numberOfShipsAvailable[i]; j++) {
         const orientation = Math.random() < 0.5 ? '↕️' : '↔️';
@@ -93,7 +95,7 @@ export class GameSetup extends Scene {
         );
         shipsOnGrid.push({
           ship: this.availableShips[i],
-          shipId: this.generateShipId(),
+          shipId: this.getShipId(),
           orientation: orientation,
           x: x,
           y: y,
