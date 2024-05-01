@@ -10,7 +10,7 @@ export class GameOver extends Scene {
     super('GameOver');
   }
 
-  create() {
+  create(data: { winner: string }) {
     this.camera = this.cameras.main;
     this.camera.setBackgroundColor(0xff0000);
 
@@ -18,7 +18,7 @@ export class GameOver extends Scene {
     this.background.setAlpha(0.5);
 
     this.gameOverText = this.add
-      .text(512, 384, 'Game Over', {
+      .text(512, 384, data.winner + ' has won', {
         fontFamily: 'Arial Black',
         fontSize: 64,
         color: '#ffffff',
