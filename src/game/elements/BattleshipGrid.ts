@@ -41,22 +41,9 @@ export class BattleshipGrid {
   }
 
   /**
-   * convert pixel coordinates to x and y coordinates on the grid
-   * @param xPx (px coordinate)
-   * @param yPx (px coordinate)
-   * @returns x and y (grid coordinates)
-   */
-  public getCoordinateToGridCell(xPx: number, yPx: number): { x: number; y: number } {
-    return {
-      x: Math.floor((xPx - this.gridDrawData.gridOffsetX) / this.gridDrawData.cellSize),
-      y: Math.floor((yPx - this.gridDrawData.gridOffsetY) / this.gridDrawData.cellSize),
-    };
-  }
-
-  /**
-   * convert coordinates on the grid to x and y pixel coordinates
-   * @param x (grid coordinate)
-   * @param y (grid coordinate)
+   * convert coordinates to x and y pixel coordinates
+   * @param x coordinate
+   * @param y coordinate
    * @returns xPx and yPx (pixel coordinates)
    */
   public getGridCellToCoordinate(x: number, y: number): { xPx: number; yPx: number } {
@@ -64,17 +51,6 @@ export class BattleshipGrid {
       xPx: this.gridDrawData.gridOffsetX + this.gridDrawData.cellSize * x,
       yPx: this.gridDrawData.gridOffsetY + this.gridDrawData.cellSize * y,
     };
-  }
-
-  /**
-   *  verify that a pixel coordinate is on the grid
-   * @param xPx (px coordinate)
-   * @param yPx (px coordinate)
-   * @returns boolean
-   */
-  public verifyCoordinateOnGrid(xPx: number, yPx: number): boolean {
-    const { x, y } = this.getCoordinateToGridCell(xPx, yPx);
-    return x >= 0 && x < this.gridSize && y >= 0 && y < this.gridSize;
   }
 
   /**
@@ -96,7 +72,7 @@ export class BattleshipGrid {
    * checks whether there are still intact ships
    * @returns whether all ships were sunken
    */
-  public allShipsSunken(): boolean {
+  public getAllShipsSunken(): boolean {
     return this.getRemainingShipIds().length === 0;
   }
 
