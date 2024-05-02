@@ -1,16 +1,22 @@
 import { ShipsOnGrid } from '../scenes/GameSetup';
 
-export interface gridCell {
+interface GridDrawData {
+  gridOffsetX: number;
+  gridOffsetY: number;
+  cellSize: number;
+}
+
+interface GridCell {
   shipId?: number; // cell is busy if shipId is present
   hit: boolean;
 }
 
 export class BattleshipGrid {
-  private grid: gridCell[][];
+  private grid: GridCell[][];
 
   constructor(
     private gridSize: number,
-    private gridData: { gridOffsetX: number; gridOffsetY: number; cellSize: number },
+    private gridDrawData: GridDrawData,
     /** array w/ information of ships to place on the grid */
     private shipsOnGrid: ShipsOnGrid,
   ) {
@@ -22,7 +28,7 @@ export class BattleshipGrid {
    */
   private initializeGrid() {
     const grid = new Array(this.gridSize).fill(null).map(() => {
-      return new Array(this.gridSize).fill(null).map(() => ({ hit: false }) as gridCell);
+      return new Array(this.gridSize).fill(null).map(() => ({ hit: false }) as GridCell);
     });
     this.shipsOnGrid.forEach((s) => {
       for (let i = 0; i < s.ship.size; i++) {
@@ -35,11 +41,40 @@ export class BattleshipGrid {
   }
 
   /**
-   * get information about the placement of the grid
-   * @returns gridData
+   * convert pixel coordinates to x and y coordinates on the grid
+   * @param xPx (px coordinate)
+   * @param yPx (px coordinate)
+   * @returns x and y (grid coordinates)
    */
-  public getGridData() {
-    return this.gridData;
+  public getCoordinateToGridCell(xPx: number, yPx: number): { x: number; y: number } {
+    return {
+      x: Math.floor((xPx - this.gridDrawData.gridOffsetX) / this.gridDrawData.cellSize),
+      y: Math.floor((yPx - this.gridDrawData.gridOffsetY) / this.gridDrawData.cellSize),
+    };
+  }
+
+  /**
+   * convert coordinates on the grid to x and y pixel coordinates
+   * @param x (grid coordinate)
+   * @param y (grid coordinate)
+   * @returns xPx and yPx (pixel coordinates)
+   */
+  public getGridCellToCoordinate(x: number, y: number): { xPx: number; yPx: number } {
+    return {
+      xPx: this.gridDrawData.gridOffsetX + this.gridDrawData.cellSize * x,
+      yPx: this.gridDrawData.gridOffsetY + this.gridDrawData.cellSize * y,
+    };
+  }
+
+  /**
+   *  verify that a pixel coordinate is on the grid
+   * @param xPx (px coordinate)
+   * @param yPx (px coordinate)
+   * @returns boolean
+   */
+  public verifyCoordinateOnGrid(xPx: number, yPx: number): boolean {
+    const { x, y } = this.getCoordinateToGridCell(xPx, yPx);
+    return x >= 0 && x < this.gridSize && y >= 0 && y < this.gridSize;
   }
 
   /**

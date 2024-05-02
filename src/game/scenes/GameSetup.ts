@@ -1,24 +1,24 @@
 import { EventBus } from '../EventBus';
 import { Scene } from 'phaser';
 
-export const enum gameModes {
-  '8x8' = 0,
+export const enum GameModes {
+  '8X8' = 0,
 }
 
-interface shipData {
+interface ShipData {
   name: string;
   size: number;
 }
 
-interface shipOnGrid {
-  ship: shipData;
+interface ShipOnGrid {
+  ship: ShipData;
   shipId: number;
   orientation?: '↔️' | '↕️';
   x: number;
   y: number;
 }
 
-export type ShipsOnGrid = shipOnGrid[];
+export type ShipsOnGrid = ShipOnGrid[];
 
 export class GameSetup extends Scene {
   camera: Phaser.Cameras.Scene2D.Camera;
@@ -29,7 +29,7 @@ export class GameSetup extends Scene {
   playersShipsOnGrid: ShipsOnGrid;
   opponentsShipsOnGrid: ShipsOnGrid;
   private numberOfShipsAvailable: number[];
-  private availableShips: shipData[] = [
+  private availableShips: ShipData[] = [
     { name: 'aircraft-carrier', size: 5 },
     { name: 'battleship', size: 4 },
     { name: 'cruiser', size: 3 },
@@ -42,7 +42,7 @@ export class GameSetup extends Scene {
     super('GameSetup');
   }
 
-  create(data: { gameMode: gameModes }) {
+  create(data: { gameMode: GameModes }) {
     this.camera = this.cameras.main;
     this.camera.setBackgroundColor(0xff4500);
 
@@ -51,7 +51,7 @@ export class GameSetup extends Scene {
 
     switch (data.gameMode) {
       default:
-      case gameModes['8x8']:
+      case GameModes['8X8']:
         this.gridSize = 8;
         this.numberOfShipsAvailable = [1, 1, 1, 1, 1];
         break;
