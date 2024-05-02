@@ -34,14 +34,6 @@ export class Game extends Scene {
       data.player,
     );
 
-    this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-      if (this.attackGrid.verifyCoordinateOnGrid(pointer.x, pointer.y)) {
-        const { x, y } = this.attackGrid.getCoordinateToGridCell(pointer.x, pointer.y);
-        this.playerMove(x, y);
-      }
-    });
-    // todo es müsste noch rechtsklick geben, mit dem man markieren kann, dass dort kein schiff ist
-
     EventBus.emit('current-scene-ready', this);
   }
 
@@ -53,14 +45,14 @@ export class Game extends Scene {
    * checks whether the game is still in progress
    * @returns whether the game is over
    */
-  checkGameOver(): boolean {
-    if (this.attackGrid.allShipsSunken()) {
+  private checkGameOver(): boolean {
+    if (this.attackGrid.getAllShipsSunken()) {
       // player has won the game
       alert('player has won the game');
       this.changeScene({ winner: 'player' });
       return true;
     }
-    if (this.defenseGrid.allShipsSunken()) {
+    if (this.defenseGrid.getAllShipsSunken()) {
       // the opponent has won the game
       alert('the opponent has won the game');
       this.changeScene({ winner: 'opponent' });
@@ -69,14 +61,19 @@ export class Game extends Scene {
     return false;
   }
 
+  /**
+   * performs a player move if x and y are valid
+   * @param x coordinate
+   * @param y coordinate
+   */
   private playerMove(x: number, y: number) {
     if (this.attackGrid.isValidMove(x, y)) {
-      const move = this.attackGrid.placeMove(x, y);
+      const shipId = this.attackGrid.placeMove(x, y);
       const { xPx, yPx } = this.attackGrid.getGridCellToCoordinate(x, y);
-      if (move !== undefined) {
+      if (shipId !== undefined) {
         this.drawMove(xPx, yPx, 'H');
-        if (this.attackGrid.getShipWasSunken(move)) {
-          this.displayShipWasSunken(move);
+        if (this.attackGrid.getShipWasSunken(shipId)) {
+          this.displayShipWasSunken(shipId);
         }
       } else {
         this.drawMove(xPx, yPx, 'M');
@@ -93,12 +90,12 @@ export class Game extends Scene {
       x = Math.floor(Math.random() * 8);
       y = Math.floor(Math.random() * 8);
     } while (!this.defenseGrid.isValidMove(x, y));
-    const move = this.defenseGrid.placeMove(x, y);
+    const shipId = this.defenseGrid.placeMove(x, y);
     const { xPx, yPx } = this.defenseGrid.getGridCellToCoordinate(x, y);
-    if (move !== undefined) {
+    if (shipId !== undefined) {
       this.drawMove(xPx, yPx, 'H');
-      if (this.defenseGrid.getShipWasSunken(move)) {
-        this.displayShipWasSunken(move);
+      if (this.defenseGrid.getShipWasSunken(shipId)) {
+        this.displayShipWasSunken(shipId);
       }
     } else {
       this.drawMove(xPx, yPx, 'M');
@@ -120,7 +117,18 @@ export class Game extends Scene {
       for (let col = 0; col < gridSize; col++) {
         const x = offsetX + col * cellSize;
         const y = offsetY + row * cellSize;
-        this.add.rectangle(x, y, cellSize, cellSize, 0xffffff).setStrokeStyle(3, 0x000000).setOrigin(0).strokeColor;
+        const rect = this.add.rectangle(x, y, cellSize, cellSize, 0xffffff);
+        rect.setStrokeStyle(3, 0x000000).setOrigin(0).strokeColor;
+        rect.setInteractive();
+        rect.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+          if (pointer.leftButtonDown()) {
+            this.playerMove(col, row);
+          }
+          if (pointer.rightButtonDown()) {
+            alert('rechtsklick');
+            // todo es müsste noch rechtsklick geben, mit dem man markieren kann, dass dort kein schiff ist
+          }
+        });
       }
     }
 
