@@ -35,18 +35,9 @@ export class Game extends Scene {
     );
 
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-      const x = pointer.x - this.attackGrid.getGridData().gridOffsetX;
-      const y = pointer.y - this.attackGrid.getGridData().gridOffsetY;
-      if (
-        x > 0 &&
-        y > 0 &&
-        x < this.attackGrid.getGridData().cellSize * data.gridSize &&
-        y < this.attackGrid.getGridData().cellSize * data.gridSize
-      ) {
-        this.playerMove(
-          Math.floor(x / this.attackGrid.getGridData().cellSize),
-          Math.floor(y / this.attackGrid.getGridData().cellSize),
-        );
+      if (this.attackGrid.verifyCoordinateOnGrid(pointer.x, pointer.y)) {
+        const { x, y } = this.attackGrid.getCoordinateToGridCell(pointer.x, pointer.y);
+        this.playerMove(x, y);
       }
     });
     // todo es müsste noch rechtsklick geben, mit dem man markieren kann, dass dort kein schiff ist
@@ -81,13 +72,14 @@ export class Game extends Scene {
   private playerMove(x: number, y: number) {
     if (this.attackGrid.isValidMove(x, y)) {
       const move = this.attackGrid.placeMove(x, y);
+      const { xPx, yPx } = this.attackGrid.getGridCellToCoordinate(x, y);
       if (move !== undefined) {
-        this.drawMove(this.attackGrid.getGridData(), x, y, 'H');
+        this.drawMove(xPx, yPx, 'H');
         if (this.attackGrid.getShipWasSunken(move)) {
           this.displayShipWasSunken(move);
         }
       } else {
-        this.drawMove(this.attackGrid.getGridData(), x, y, 'M');
+        this.drawMove(xPx, yPx, 'M');
       }
       if (!this.checkGameOver()) {
         this.opponentMove();
@@ -102,13 +94,14 @@ export class Game extends Scene {
       y = Math.floor(Math.random() * 8);
     } while (!this.defenseGrid.isValidMove(x, y));
     const move = this.defenseGrid.placeMove(x, y);
+    const { xPx, yPx } = this.defenseGrid.getGridCellToCoordinate(x, y);
     if (move !== undefined) {
-      this.drawMove(this.defenseGrid.getGridData(), x, y, 'H');
+      this.drawMove(xPx, yPx, 'H');
       if (this.defenseGrid.getShipWasSunken(move)) {
         this.displayShipWasSunken(move);
       }
     } else {
-      this.drawMove(this.defenseGrid.getGridData(), x, y, 'M');
+      this.drawMove(xPx, yPx, 'M');
     }
     this.checkGameOver();
   }
@@ -166,21 +159,11 @@ export class Game extends Scene {
     });
   }
 
-  private drawMove(
-    gridData: { gridOffsetX: number; gridOffsetY: number; cellSize: number },
-    x: number,
-    y: number,
-    char: string,
-  ) {
-    this.gameText = this.add.text(
-      gridData.gridOffsetX + gridData.cellSize * x + 15,
-      gridData.gridOffsetY + gridData.cellSize * y + 15,
-      char,
-      {
-        fontFamily: 'Arial Black',
-        fontSize: 24,
-        color: '#000000',
-      },
-    );
+  private drawMove(xPx: number, yPx: number, char: string) {
+    this.gameText = this.add.text(xPx + 15, yPx + 15, char, {
+      fontFamily: 'Arial Black',
+      fontSize: 24,
+      color: '#000000',
+    });
   }
 }
