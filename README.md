@@ -1,6 +1,8 @@
-# Übung Multimodale Benutzungsoberflächen
+# Multimodal User Interfaces (MBO)
 
-Battleship TODO
+## First exercise task
+
+Design and implement a simple point-and-click game (Battleship in this case), with the aim of making the application multimodal, specifically enabling voice control.
 
 ## Requirements
 
