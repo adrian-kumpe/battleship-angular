@@ -1,6 +1,6 @@
 # Multimodal User Interfaces (MBO)
 
-## First exercise
+## First exercise task
 
 Design and implement a simple point-and-click game (Battleship in this case), with the aim of making the application multimodal, specifically enabling voice control.
 
