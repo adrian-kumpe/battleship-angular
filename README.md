@@ -6,7 +6,13 @@
 
 Design and implement a simple point-and-click game (Battleship in this case), with the aim of making the application multimodal, specifically enabling voice control.
 
-## Requirements
+## Second and third exercise tasks
+
+Implement voice control for your game by using the Alexa Skills Kit (ASK), which involves creating an Alexa skill with intent handler functions and setting up a REST interface for the game to receive commands from Alexa.
+
+## Developement
+
+### Requirements
 
 [Node.js](https://nodejs.org) is required to install dependencies and run scripts via `npm`.
 [ng cli](https://angular.io/cli) is required to run the project.
@@ -14,7 +20,7 @@ Design and implement a simple point-and-click game (Battleship in this case), wi
 [esbenp.prettier-vscode](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
 [dbaeumer.vscode-eslint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint)
 
-## Available Commands
+### Available Commands
 
 | Command          | Description                                     |
 | ---------------- | ----------------------------------------------- |
