@@ -10,7 +10,7 @@ Design and implement a simple point-and-click game (Battleship in this case), wi
 
 Implement voice control for your game by using the Alexa Skills Kit (ASK), which involves creating an Alexa skill with intent handler functions and setting up a REST interface for the game to receive commands from Alexa.
 
-## Developement
+## Development
 
 ### Requirements
 
